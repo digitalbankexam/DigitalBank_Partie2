@@ -17,7 +17,13 @@ if os.path.exists(MODEL_FILE):
 else:
     print(f"⚠️ Fichier introuvable : {MODEL_FILE}")
     model = None
-
+    
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'API is running',
+        'message': 'Use /predict endpoint to analyze transactions'
+    })
 @app.route('/predict', methods=['POST'])
 def predict():
     # Vérification que le modèle est prêt
