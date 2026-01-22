@@ -1,0 +1,909 @@
+{
+    "name": "Workflow 2 : Alerte de Tentatives de Connexion Échouées",
+    "flow": [
+        {
+            "id": 7,
+            "module": "postgres:Query",
+            "version": 2,
+            "parameters": {
+                "account": 4738100,
+                "continueWhenNoRes": true,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "command": "SELECT\r\n  ip_address,\r\n  COUNT(*) AS fail_count,\r\n  MAX(created_at) AS last_seen\r\nFROM public.login_attempts\r\nWHERE success = false\r\nGROUP BY ip_address\r\nORDER BY fail_count DESC;"
+            },
+            "metadata": {
+                "designer": {
+                    "x": -187,
+                    "y": -20
+                },
+                "restore": {
+                    "parameters": {
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "My PostgreSQL connection (postgres.vewuxnszxvnalrspyybo@aws-1-eu-central-1.pooler.supabase.com:6543/postgres)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "continueWhenNoRes",
+                        "type": "boolean",
+                        "label": "Continue the execution of the route even if the module returns no rows",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "command",
+                        "type": "text",
+                        "label": "Command",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 10,
+            "module": "slack:CreateMessage",
+            "version": 4,
+            "parameters": {
+                "__IMTCONN__": 3942072
+            },
+            "filter": {
+                "name": "",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{7.fail_count}}",
+                            "b": "5",
+                            "o": "text:notequal:ci"
+                        }
+                    ]
+                ]
+            },
+            "mapper": {
+                "text": "🚨 Alerte sécurité – Tentatives de connexion suspectes\r\nIP suspecte détectée : {{7.ip_address}}\nNombre d’échecs : {{7.fail_count}}\nDernière tentative : {{7.last_seen}}\r\nAction recommandée : vérifier ou bloquer l’IP.",
+                "parse": false,
+                "mrkdwn": true,
+                "channel": "C0A1G8NSZBR",
+                "channelType": "public",
+                "channelWType": "list"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 59,
+                    "y": -150
+                },
+                "restore": {
+                    "expect": {
+                        "parse": {
+                            "mode": "chose"
+                        },
+                        "mrkdwn": {
+                            "mode": "chose"
+                        },
+                        "channel": {
+                            "mode": "chose",
+                            "label": "new-channel"
+                        },
+                        "link_names": {
+                            "mode": "chose"
+                        },
+                        "channelType": {
+                            "label": "Public channel"
+                        },
+                        "channelWType": {
+                            "label": "Select from the list"
+                        },
+                        "unfurl_links": {
+                            "mode": "chose"
+                        },
+                        "unfurl_media": {
+                            "mode": "chose"
+                        },
+                        "reply_broadcast": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "slack3"
+                            },
+                            "label": "QCM-Bot (newworkspace-lgp2823.slack.com - make)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "channelWType",
+                        "type": "select",
+                        "label": "Enter a channel ID or name",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "manualy",
+                                "list"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "type": "text",
+                        "label": "Text"
+                    },
+                    {
+                        "name": "blocks",
+                        "type": "text",
+                        "label": "Blocks"
+                    },
+                    {
+                        "name": "thread_ts",
+                        "type": "text",
+                        "label": "Thread message ID (time stamp)"
+                    },
+                    {
+                        "name": "reply_broadcast",
+                        "type": "boolean",
+                        "label": "Reply broadcast"
+                    },
+                    {
+                        "name": "link_names",
+                        "type": "boolean",
+                        "label": "Link names"
+                    },
+                    {
+                        "name": "parse",
+                        "type": "boolean",
+                        "label": "Parse message text"
+                    },
+                    {
+                        "name": "mrkdwn",
+                        "type": "boolean",
+                        "label": "Use markdown"
+                    },
+                    {
+                        "name": "unfurl_links",
+                        "type": "boolean",
+                        "label": "Unfurl primarily text-based content"
+                    },
+                    {
+                        "name": "unfurl_media",
+                        "type": "boolean",
+                        "label": "Unfurl media content"
+                    },
+                    {
+                        "name": "icon_emoji",
+                        "type": "text",
+                        "label": "Icon emoji"
+                    },
+                    {
+                        "name": "icon_url",
+                        "type": "url",
+                        "label": "Icon url"
+                    },
+                    {
+                        "name": "username",
+                        "type": "text",
+                        "label": "User name"
+                    },
+                    {
+                        "name": "channelType",
+                        "type": "select",
+                        "label": "Channel type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "public",
+                                "private",
+                                "im",
+                                "mpim"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "type": "select",
+                        "label": "Public channel",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 12,
+            "module": "discord:createMessage",
+            "version": 2,
+            "parameters": {
+                "__IMTCONN__": 4739104
+            },
+            "mapper": {
+                "select": "channel",
+                "content": "{{10.message.text}}",
+                "channelId": "1463313257568669711",
+                "message_reference": {}
+            },
+            "metadata": {
+                "designer": {
+                    "x": 362,
+                    "y": -165
+                },
+                "restore": {
+                    "expect": {
+                        "tts": {
+                            "mode": "chose"
+                        },
+                        "files": {
+                            "mode": "chose"
+                        },
+                        "embeds": {
+                            "mode": "chose"
+                        },
+                        "select": {
+                            "label": "Send a Message to a Channel"
+                        },
+                        "channelId": {
+                            "mode": "chose",
+                            "label": "general"
+                        },
+                        "components": {
+                            "mode": "chose"
+                        },
+                        "sticker_ids": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "discord"
+                            },
+                            "label": "My Discord connection (Make (team1278341651986911253))"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:discord",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "select",
+                        "type": "select",
+                        "label": "Choose a Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "channel",
+                                "thread",
+                                "user"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "content",
+                        "type": "text",
+                        "label": "Message"
+                    },
+                    {
+                        "name": "tts",
+                        "type": "boolean",
+                        "label": "Is TTS message"
+                    },
+                    {
+                        "name": "embeds",
+                        "spec": [
+                            {
+                                "name": "title",
+                                "type": "text",
+                                "label": "Title"
+                            },
+                            {
+                                "name": "type",
+                                "type": "text",
+                                "label": "Type"
+                            },
+                            {
+                                "name": "description",
+                                "type": "text",
+                                "label": "Description"
+                            },
+                            {
+                                "name": "url",
+                                "type": "url",
+                                "label": "URL"
+                            },
+                            {
+                                "name": "timestamp",
+                                "type": "date",
+                                "label": "Timestamp"
+                            },
+                            {
+                                "name": "color",
+                                "type": "uinteger",
+                                "label": "Color"
+                            },
+                            {
+                                "name": "footer",
+                                "spec": [
+                                    {
+                                        "name": "text",
+                                        "type": "text",
+                                        "label": "Text"
+                                    },
+                                    {
+                                        "name": "icon_url",
+                                        "type": "url",
+                                        "label": "Icon URL"
+                                    },
+                                    {
+                                        "name": "proxy_icon_url",
+                                        "type": "url",
+                                        "label": "Proxy Icon URL"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Footer"
+                            },
+                            {
+                                "name": "image",
+                                "spec": [
+                                    {
+                                        "name": "url",
+                                        "type": "url",
+                                        "label": "URL"
+                                    },
+                                    {
+                                        "name": "proxy_url",
+                                        "type": "url",
+                                        "label": "Proxy URL"
+                                    },
+                                    {
+                                        "name": "height",
+                                        "type": "uinteger",
+                                        "label": "Height"
+                                    },
+                                    {
+                                        "name": "width",
+                                        "type": "uinteger",
+                                        "label": "Width"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Image"
+                            },
+                            {
+                                "name": "thumbnail",
+                                "spec": [
+                                    {
+                                        "name": "url",
+                                        "type": "url",
+                                        "label": "URL"
+                                    },
+                                    {
+                                        "name": "proxy_url",
+                                        "type": "url",
+                                        "label": "Proxy URL"
+                                    },
+                                    {
+                                        "name": "height",
+                                        "type": "uinteger",
+                                        "label": "Height"
+                                    },
+                                    {
+                                        "name": "width",
+                                        "type": "uinteger",
+                                        "label": "Width"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Thumbnail"
+                            },
+                            {
+                                "name": "video",
+                                "spec": [
+                                    {
+                                        "name": "url",
+                                        "type": "url",
+                                        "label": "URL"
+                                    },
+                                    {
+                                        "name": "height",
+                                        "type": "uinteger",
+                                        "label": "Height"
+                                    },
+                                    {
+                                        "name": "width",
+                                        "type": "uinteger",
+                                        "label": "Width"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Video"
+                            },
+                            {
+                                "name": "provider",
+                                "spec": [
+                                    {
+                                        "name": "name",
+                                        "type": "text",
+                                        "label": "Name"
+                                    },
+                                    {
+                                        "name": "url",
+                                        "type": "url",
+                                        "label": "URL"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Provider"
+                            },
+                            {
+                                "name": "author",
+                                "spec": [
+                                    {
+                                        "name": "name",
+                                        "type": "text",
+                                        "label": "Name"
+                                    },
+                                    {
+                                        "name": "url",
+                                        "type": "url",
+                                        "label": "URL"
+                                    },
+                                    {
+                                        "name": "icon_url",
+                                        "type": "url",
+                                        "label": "Icon URL"
+                                    },
+                                    {
+                                        "name": "proxy_icon_url",
+                                        "type": "url",
+                                        "label": "Proxy Icon URL"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Author"
+                            },
+                            {
+                                "name": "fields",
+                                "spec": [
+                                    {
+                                        "name": "name",
+                                        "type": "text",
+                                        "label": "Name"
+                                    },
+                                    {
+                                        "name": "value",
+                                        "type": "text",
+                                        "label": "Value"
+                                    },
+                                    {
+                                        "name": "inline",
+                                        "type": "boolean",
+                                        "label": "Inline Flag"
+                                    }
+                                ],
+                                "type": "array",
+                                "label": "Fields"
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Embeds"
+                    },
+                    {
+                        "name": "sticker_ids",
+                        "spec": [
+                            {
+                                "name": "id",
+                                "type": "text",
+                                "label": "Sticker ID",
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Stickers"
+                    },
+                    {
+                        "name": "components",
+                        "spec": [
+                            {
+                                "name": "type",
+                                "type": "select",
+                                "label": "Component Type",
+                                "options": [
+                                    {
+                                        "label": "A New Row",
+                                        "value": 1,
+                                        "nested": [
+                                            {
+                                                "name": "components",
+                                                "spec": [
+                                                    {
+                                                        "name": "type",
+                                                        "type": "select",
+                                                        "label": "Row Component Type",
+                                                        "options": [
+                                                            {
+                                                                "label": "Button",
+                                                                "value": 2,
+                                                                "nested": [
+                                                                    {
+                                                                        "name": "style",
+                                                                        "type": "select",
+                                                                        "label": "Style",
+                                                                        "options": [
+                                                                            {
+                                                                                "label": "Primary (blurple)",
+                                                                                "value": 1,
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "A developer-defined identifier for the button, max 100 characters.",
+                                                                                        "name": "custom_id",
+                                                                                        "type": "text",
+                                                                                        "label": "Custom ID",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Secondary (grey)",
+                                                                                "value": 2,
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "A developer-defined identifier for the button, max 100 characters.",
+                                                                                        "name": "custom_id",
+                                                                                        "type": "text",
+                                                                                        "label": "Custom ID",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Success (green)",
+                                                                                "value": 3,
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "A developer-defined identifier for the button, max 100 characters.",
+                                                                                        "name": "custom_id",
+                                                                                        "type": "text",
+                                                                                        "label": "Custom ID",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Danger (red)",
+                                                                                "value": 4,
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "A developer-defined identifier for the button, max 100 characters.",
+                                                                                        "name": "custom_id",
+                                                                                        "type": "text",
+                                                                                        "label": "Custom ID",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Link (grey)",
+                                                                                "value": 5,
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "A URL for link-style buttons.",
+                                                                                        "name": "url",
+                                                                                        "type": "url",
+                                                                                        "label": "URL",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ],
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "help": "Text that appears on the button, max 80 characters.",
+                                                                        "name": "label",
+                                                                        "type": "text",
+                                                                        "label": "Label"
+                                                                    },
+                                                                    {
+                                                                        "name": "disabled",
+                                                                        "type": "boolean",
+                                                                        "label": "Disabled"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "label": "Select Menu",
+                                                                "value": 3,
+                                                                "nested": [
+                                                                    {
+                                                                        "help": "A developer-defined identifier for the button, max 100 characters.",
+                                                                        "name": "custom_id",
+                                                                        "type": "text",
+                                                                        "label": "Custom ID",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "options",
+                                                                        "spec": [
+                                                                            {
+                                                                                "help": "The user-facing name of the option, max 100 characters.",
+                                                                                "name": "label",
+                                                                                "type": "text",
+                                                                                "label": "Label",
+                                                                                "required": true
+                                                                            },
+                                                                            {
+                                                                                "help": "The dev-defined value of the option, max 100 characters.",
+                                                                                "name": "value",
+                                                                                "type": "text",
+                                                                                "label": "Value",
+                                                                                "required": true
+                                                                            },
+                                                                            {
+                                                                                "help": "An additional description of the option, max 100 characters.",
+                                                                                "name": "description",
+                                                                                "type": "text",
+                                                                                "label": "Description"
+                                                                            },
+                                                                            {
+                                                                                "name": "default",
+                                                                                "type": "boolean",
+                                                                                "label": "Default"
+                                                                            }
+                                                                        ],
+                                                                        "type": "array",
+                                                                        "label": "Options",
+                                                                        "required": true,
+                                                                        "validate": {
+                                                                            "maxItems": 25
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        "help": "Custom placeholder text if nothing is selected, max 150 characters.",
+                                                                        "name": "placeholder",
+                                                                        "type": "text",
+                                                                        "label": "Placeholder"
+                                                                    },
+                                                                    {
+                                                                        "help": "The minimum number of items that must be chosen; default 1, min 0, max 2.",
+                                                                        "name": "min_values",
+                                                                        "type": "uinteger",
+                                                                        "label": "Minimum values"
+                                                                    },
+                                                                    {
+                                                                        "help": "The maximum number of items that must be chosen; default 1, max 25.",
+                                                                        "name": "max_values",
+                                                                        "type": "uinteger",
+                                                                        "label": "Maximum values"
+                                                                    },
+                                                                    {
+                                                                        "name": "disabled",
+                                                                        "type": "boolean",
+                                                                        "label": "Disabled"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "required": true
+                                                    }
+                                                ],
+                                                "type": "array",
+                                                "label": "Row Components",
+                                                "required": true
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Components"
+                    },
+                    {
+                        "name": "files",
+                        "spec": [
+                            {
+                                "name": "filename",
+                                "type": "filename",
+                                "label": "File Name",
+                                "required": true,
+                                "semantic": "file:name"
+                            },
+                            {
+                                "name": "data",
+                                "type": "buffer",
+                                "label": "Data",
+                                "required": true,
+                                "semantic": "file:data"
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Files"
+                    },
+                    {
+                        "name": "message_reference",
+                        "spec": [
+                            {
+                                "name": "message_id",
+                                "type": "text",
+                                "label": "Message ID"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Message Reference"
+                    },
+                    {
+                        "name": "channelId",
+                        "type": "select",
+                        "label": "Channel ID",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 13,
+            "module": "postgres:InsertIntoTable",
+            "version": 2,
+            "parameters": {
+                "table": "\"public\".\"alerts\"",
+                "account": 4738100,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "@id": "",
+                "@severity": "HIGH",
+                "@last_seen": "{{7.last_seen}}",
+                "@alert_type": "FAILED_LOGIN_ATTEMPTS",
+                "@created_at": "{{now}}",
+                "@fail_count": "{{7.fail_count}}",
+                "@ip_address": "{{7.ip_address}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 522,
+                    "y": 23
+                },
+                "restore": {
+                    "parameters": {
+                        "table": {
+                            "label": "public.alerts"
+                        },
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "My PostgreSQL connection (postgres.vewuxnszxvnalrspyybo@aws-1-eu-central-1.pooler.supabase.com:6543/postgres)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    },
+                    {
+                        "name": "returnRows",
+                        "type": "boolean",
+                        "label": "Return Rows"
+                    },
+                    {
+                        "name": "table",
+                        "type": "select",
+                        "label": "Table",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "@id",
+                        "type": "integer",
+                        "label": "id"
+                    },
+                    {
+                        "name": "@alert_type",
+                        "type": "text",
+                        "label": "alert_type"
+                    },
+                    {
+                        "name": "@ip_address",
+                        "type": "text",
+                        "label": "ip_address"
+                    },
+                    {
+                        "name": "@fail_count",
+                        "type": "integer",
+                        "label": "fail_count"
+                    },
+                    {
+                        "name": "@last_seen",
+                        "type": "text",
+                        "label": "last_seen"
+                    },
+                    {
+                        "name": "@severity",
+                        "type": "text",
+                        "label": "severity"
+                    },
+                    {
+                        "name": "@created_at",
+                        "type": "text",
+                        "label": "created_at"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "rowsAffected",
+                        "type": "number",
+                        "label": "Affected rows"
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu1.make.com",
+        "notes": []
+    }
+}

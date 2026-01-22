@@ -1,0 +1,578 @@
+{
+    "name": "Workflow 1 : Alerte de Transaction Élevée",
+    "flow": [
+        {
+            "id": 3,
+            "module": "postgres:SelectFromTable",
+            "version": 2,
+            "parameters": {
+                "table": "\"public\".\"transactions\"",
+                "account": 4738091,
+                "continueWhenNoRes": false,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "sort": [],
+                "limit": "",
+                "where": [
+                    [
+                        {
+                            "a": "amount",
+                            "b": "-5000",
+                            "o": "lessorequal"
+                        }
+                    ]
+                ]
+            },
+            "metadata": {
+                "designer": {
+                    "x": -468,
+                    "y": -89
+                },
+                "restore": {
+                    "parameters": {
+                        "table": {
+                            "label": "public.transactions"
+                        },
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "digitalbank (postgres.vewuxnszxvnalrspyybo@aws-1-eu-central-1.pooler.supabase.com:5432/postgres)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "continueWhenNoRes",
+                        "type": "boolean",
+                        "label": "Continue the execution of the route even if the module returns no rows",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    },
+                    {
+                        "name": "table",
+                        "type": "select",
+                        "label": "Table",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "where",
+                        "type": "filter",
+                        "label": "Filter",
+                        "options": {
+                            "store": [
+                                {
+                                    "label": "transaction_id",
+                                    "value": "transaction_id"
+                                },
+                                {
+                                    "label": "account_id",
+                                    "value": "account_id"
+                                },
+                                {
+                                    "label": "transaction_type",
+                                    "value": "transaction_type"
+                                },
+                                {
+                                    "label": "amount",
+                                    "value": "amount"
+                                },
+                                {
+                                    "label": "currency",
+                                    "value": "currency"
+                                },
+                                {
+                                    "label": "merchant_name",
+                                    "value": "merchant_name"
+                                },
+                                {
+                                    "label": "merchant_category",
+                                    "value": "merchant_category"
+                                },
+                                {
+                                    "label": "location",
+                                    "value": "location"
+                                },
+                                {
+                                    "label": "timestamp",
+                                    "value": "timestamp"
+                                },
+                                {
+                                    "label": "status",
+                                    "value": "status"
+                                },
+                                {
+                                    "label": "is_fraud",
+                                    "value": "is_fraud"
+                                },
+                                {
+                                    "label": "fraud_score",
+                                    "value": "fraud_score"
+                                }
+                            ],
+                            "operators": [
+                                {
+                                    "label": "Basic",
+                                    "options": [
+                                        {
+                                            "label": "Is not null",
+                                            "value": "exist"
+                                        },
+                                        {
+                                            "label": "Is null",
+                                            "value": "notexist"
+                                        },
+                                        {
+                                            "label": "Equal to",
+                                            "value": "equal"
+                                        },
+                                        {
+                                            "label": "Not equal to",
+                                            "value": "notequal"
+                                        },
+                                        {
+                                            "label": "Greater than",
+                                            "value": "greater"
+                                        },
+                                        {
+                                            "label": "Greater than or equal to",
+                                            "value": "greaterorequal"
+                                        },
+                                        {
+                                            "label": "Less than",
+                                            "value": "less"
+                                        },
+                                        {
+                                            "label": "Less than or equal to",
+                                            "value": "lessorequal"
+                                        },
+                                        {
+                                            "label": "Contains",
+                                            "value": "contain"
+                                        },
+                                        {
+                                            "label": "Does not contain",
+                                            "value": "notcontain"
+                                        },
+                                        {
+                                            "label": "Starts with",
+                                            "value": "startwith"
+                                        },
+                                        {
+                                            "label": "Does not start with",
+                                            "value": "notstartwith"
+                                        },
+                                        {
+                                            "label": "Ends with",
+                                            "value": "endwith"
+                                        },
+                                        {
+                                            "label": "Does not end with",
+                                            "value": "notendwith"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "spec": [
+                            {
+                                "name": "column",
+                                "type": "select",
+                                "label": "Column",
+                                "dynamic": true,
+                                "options": [],
+                                "required": true
+                            },
+                            {
+                                "name": "order",
+                                "type": "select",
+                                "label": "Order",
+                                "options": [
+                                    {
+                                        "label": "Ascending",
+                                        "value": "asc"
+                                    },
+                                    {
+                                        "label": "Descending",
+                                        "value": "desc"
+                                    }
+                                ],
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Sort"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "__IMTLENGTH__",
+                        "type": "uinteger",
+                        "label": "Total number of bundles"
+                    },
+                    {
+                        "name": "__IMTINDEX__",
+                        "type": "uinteger",
+                        "label": "Bundle order position"
+                    },
+                    {
+                        "name": "transaction_id",
+                        "type": "integer",
+                        "label": "transaction_id",
+                        "required": false
+                    },
+                    {
+                        "name": "account_id",
+                        "type": "integer",
+                        "label": "account_id",
+                        "required": false
+                    },
+                    {
+                        "name": "transaction_type",
+                        "type": "text",
+                        "label": "transaction_type",
+                        "required": false
+                    },
+                    {
+                        "name": "amount",
+                        "type": "number",
+                        "label": "amount",
+                        "required": false
+                    },
+                    {
+                        "name": "currency",
+                        "type": "text",
+                        "label": "currency",
+                        "required": false
+                    },
+                    {
+                        "name": "merchant_name",
+                        "type": "text",
+                        "label": "merchant_name",
+                        "required": false
+                    },
+                    {
+                        "name": "merchant_category",
+                        "type": "text",
+                        "label": "merchant_category",
+                        "required": false
+                    },
+                    {
+                        "name": "location",
+                        "type": "text",
+                        "label": "location",
+                        "required": false
+                    },
+                    {
+                        "name": "timestamp",
+                        "type": "text",
+                        "label": "timestamp",
+                        "required": false
+                    },
+                    {
+                        "name": "status",
+                        "type": "text",
+                        "label": "status",
+                        "required": false
+                    },
+                    {
+                        "name": "is_fraud",
+                        "type": "text",
+                        "label": "is_fraud",
+                        "required": false
+                    },
+                    {
+                        "name": "fraud_score",
+                        "type": "number",
+                        "label": "fraud_score",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": 5,
+            "module": "email:ActionSendEmail",
+            "version": 7,
+            "parameters": {
+                "account": 3933276,
+                "saveAfterSent": false
+            },
+            "mapper": {
+                "cc": [],
+                "to": [
+                    "maherkr77@gmail.com"
+                ],
+                "bcc": [],
+                "from": "",
+                "text": "Une transaction élevée a été détectée.\r\n\r\n💰 Montant : {{3.amount}}€\r\n🏪 Marchand : {{3.merchant_name}}\n📅 Date : {{3.timestamp}}\r\nMerci de vérifier.\r\n",
+                "sender": "",
+                "headers": [],
+                "replyTo": "",
+                "subject": "🚨 ALERTE – Transaction élevée détectée",
+                "priority": "normal",
+                "inReplyTo": "",
+                "references": [],
+                "attachments": [],
+                "contentType": "text"
+            },
+            "metadata": {
+                "designer": {
+                    "x": -132,
+                    "y": -73
+                },
+                "restore": {
+                    "expect": {
+                        "cc": {
+                            "mode": "chose"
+                        },
+                        "to": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "bcc": {
+                            "mode": "chose"
+                        },
+                        "priority": {
+                            "label": "Normal"
+                        },
+                        "references": {
+                            "mode": "chose"
+                        },
+                        "attachments": {
+                            "mode": "chose"
+                        },
+                        "contentType": {
+                            "label": "Plaintext"
+                        }
+                    },
+                    "parameters": {
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google-restricted"
+                            },
+                            "label": "My Google Restricted connection (maher.karoui@esprit.tn)"
+                        },
+                        "saveAfterSent": {
+                            "label": "No"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "saveAfterSent",
+                        "type": "select",
+                        "label": "Save message after sending",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                true,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "type": "hidden"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "to",
+                        "spec": {
+                            "name": "value",
+                            "type": "email",
+                            "label": "Email address",
+                            "required": true
+                        },
+                        "type": "array",
+                        "label": "To",
+                        "required": true
+                    },
+                    {
+                        "name": "subject",
+                        "type": "text",
+                        "label": "Subject"
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Content Type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "html",
+                                "text"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "attachments",
+                        "spec": [
+                            {
+                                "name": "fileName",
+                                "type": "filename",
+                                "label": "File name",
+                                "required": true,
+                                "semantic": "file:name"
+                            },
+                            {
+                                "name": "data",
+                                "type": "buffer",
+                                "label": "Data",
+                                "required": true,
+                                "semantic": "file:data"
+                            },
+                            {
+                                "name": "cid",
+                                "type": "text",
+                                "label": "Content-ID"
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Attachments"
+                    },
+                    {
+                        "name": "cc",
+                        "spec": {
+                            "name": "value",
+                            "type": "email",
+                            "label": "Email address"
+                        },
+                        "type": "array",
+                        "label": "Copy recipient"
+                    },
+                    {
+                        "name": "bcc",
+                        "spec": {
+                            "name": "value",
+                            "type": "email",
+                            "label": "Email address"
+                        },
+                        "type": "array",
+                        "label": "Blind copy recipient"
+                    },
+                    {
+                        "name": "from",
+                        "type": "text",
+                        "label": "From"
+                    },
+                    {
+                        "name": "sender",
+                        "type": "text",
+                        "label": "Sender"
+                    },
+                    {
+                        "name": "replyTo",
+                        "type": "text",
+                        "label": "Reply-To"
+                    },
+                    {
+                        "name": "inReplyTo",
+                        "type": "text",
+                        "label": "In-Reply-To"
+                    },
+                    {
+                        "name": "references",
+                        "spec": {
+                            "name": "value",
+                            "type": "text",
+                            "label": "Reference",
+                            "required": true
+                        },
+                        "type": "array",
+                        "label": "References"
+                    },
+                    {
+                        "name": "priority",
+                        "type": "select",
+                        "label": "Priority",
+                        "validate": {
+                            "enum": [
+                                "high",
+                                "normal",
+                                "low"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "headers",
+                        "spec": [
+                            {
+                                "name": "key",
+                                "type": "text",
+                                "label": "Key",
+                                "required": true
+                            },
+                            {
+                                "name": "value",
+                                "type": "text",
+                                "label": "Value",
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Headers"
+                    },
+                    {
+                        "name": "text",
+                        "type": "text",
+                        "label": "Content"
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu1.make.com",
+        "notes": []
+    }
+}

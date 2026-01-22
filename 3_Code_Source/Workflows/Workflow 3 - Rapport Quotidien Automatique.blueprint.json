@@ -1,0 +1,421 @@
+{
+    "name": "Workflow 3 : Rapport Quotidien Automatique",
+    "flow": [
+        {
+            "id": 1,
+            "module": "postgres:Query",
+            "version": 2,
+            "parameters": {
+                "account": 4738091,
+                "continueWhenNoRes": false,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "command": "WITH tx_24h AS (\r\n  SELECT *\r\n  FROM public.transactions\r\n  WHERE \"timestamp\" >= NOW() - INTERVAL '24 hours'\r\n)\r\n\r\nSELECT\r\n  NOW() - INTERVAL '24 hours' AS period_start,\r\n  NOW() AS period_end,\r\n\r\n  -- Nombre total de transactions\r\n  COUNT(*) AS tx_count,\r\n\r\n  -- Nombre de fraudes détectées\r\n  COUNT(*) FILTER (WHERE is_fraud = true) AS fraud_count,\r\n\r\n  -- Revenus totaux\r\n  COALESCE(SUM(ABS(amount)), 0) AS total_revenue,\r\n\r\n  -- Top 5 marchands (par volume)\r\n  COALESCE(\r\n    (\r\n      SELECT string_agg(\r\n        merchant_name || ' : ' || merchant_total::text,\r\n        E'\\n'\r\n        ORDER BY merchant_total DESC\r\n      )\r\n      FROM (\r\n        SELECT\r\n          merchant_name,\r\n          SUM(ABS(amount)) AS merchant_total\r\n        FROM tx_24h\r\n        GROUP BY merchant_name\r\n        ORDER BY merchant_total DESC\r\n        LIMIT 5\r\n      ) t\r\n    ),\r\n    ''\r\n  ) AS top_5_merchants\r\n\r\nFROM tx_24h;"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "digitalbank (postgres.vewuxnszxvnalrspyybo@aws-1-eu-central-1.pooler.supabase.com:5432/postgres)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "continueWhenNoRes",
+                        "type": "boolean",
+                        "label": "Continue the execution of the route even if the module returns no rows",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "command",
+                        "type": "text",
+                        "label": "Command",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 2,
+            "module": "google-docs:createADocumentFromTemplate",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 3929203
+            },
+            "mapper": {
+                "from": "drive",
+                "name": "Rapport des Transactions – 24 dernières heures ",
+                "select": "dropdown",
+                "document": "/1Yf9htQkAsUTQnATU7gQzlwFrqzKIENMKeityvT-PtgA",
+                "folderId": "/",
+                "requests": {
+                    "tx_count": "{{1.tx_count}}",
+                    "fraud_rate": "{{emptystring}}",
+                    "fraud_count": "{{1.fraud_count}}",
+                    "generated_at": "{{1.period_end}}",
+                    "total_revenue": "{{1.total_revenue}}",
+                    "top_5_merchants": "{{1.top_5_merchants}}"
+                },
+                "destination": "drive"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "label": "My Drive"
+                        },
+                        "select": {
+                            "label": "By Dropdown"
+                        },
+                        "document": {
+                            "path": [
+                                "digitalbank-template"
+                            ]
+                        },
+                        "folderId": {
+                            "mode": "chose",
+                            "path": [
+                                "/"
+                            ]
+                        },
+                        "destination": {
+                            "label": "My Drive"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google"
+                            },
+                            "label": "My Google connection (maherkr77@gmail.com)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "select",
+                        "type": "select",
+                        "label": "Create a Document from a Template",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "map",
+                                "dropdown"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "type": "text",
+                        "label": "Title",
+                        "required": true
+                    },
+                    {
+                        "name": "destination",
+                        "type": "select",
+                        "label": "New Drive Location",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "drive",
+                                "share",
+                                "team"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "type": "select",
+                        "label": "Choose a Drive",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "drive",
+                                "share",
+                                "team"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "document",
+                        "type": "file",
+                        "label": "Document ID",
+                        "required": true
+                    },
+                    {
+                        "name": "requests",
+                        "spec": [
+                            {
+                                "name": "tx_count",
+                                "type": "any"
+                            },
+                            {
+                                "name": "fraud_count",
+                                "type": "any"
+                            },
+                            {
+                                "name": "total_revenue",
+                                "type": "any"
+                            },
+                            {
+                                "name": "fraud_rate",
+                                "type": "any"
+                            },
+                            {
+                                "name": "top_5_merchants",
+                                "type": "any"
+                            },
+                            {
+                                "name": "generated_at",
+                                "type": "any"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Values"
+                    },
+                    {
+                        "name": "folderId",
+                        "type": "folder",
+                        "label": "New Document's Location",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "module": "google-docs:exportADocument",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 3929203
+            },
+            "mapper": {
+                "document": "{{2.id}}",
+                "mimeType": "application/pdf",
+                "destination": "drive"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "document": {
+                            "mode": "edit",
+                            "path": []
+                        },
+                        "mimeType": {
+                            "mode": "chose",
+                            "label": "PDF Document (.pdf)"
+                        },
+                        "destination": {
+                            "label": "My Drive"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google"
+                            },
+                            "label": "My Google connection (maherkr77@gmail.com)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "destination",
+                        "type": "select",
+                        "label": "Choose a Drive",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "drive",
+                                "share",
+                                "team"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "mimeType",
+                        "type": "select",
+                        "label": "Type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/rtf",
+                                "application/pdf",
+                                "text/plain",
+                                "text/html",
+                                "application/epub+zip"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "document",
+                        "type": "file",
+                        "label": "Document ID",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "google-drive:uploadAFile",
+            "version": 4,
+            "parameters": {
+                "__IMTCONN__": 3929335
+            },
+            "mapper": {
+                "data": "{{3.data}}",
+                "select": "map",
+                "convert": false,
+                "filename": "{{3.filename}}",
+                "folderId": "189yXL69Vf59_ntZesuSKtfq_DLOQ1T3q"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "select": {
+                            "label": "Enter manually"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google-restricted"
+                            },
+                            "label": "My Google Restricted connection (maher.karoui@esprit.tn)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google-restricted",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "select",
+                        "type": "select",
+                        "label": "Enter a Folder ID",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "map",
+                                "value"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "title",
+                        "type": "text",
+                        "label": "New File Name"
+                    },
+                    {
+                        "name": "filename",
+                        "type": "text",
+                        "label": "File Name",
+                        "required": true
+                    },
+                    {
+                        "name": "data",
+                        "type": "buffer",
+                        "label": "Data",
+                        "required": true
+                    },
+                    {
+                        "name": "convert",
+                        "type": "boolean",
+                        "label": "Convert a File",
+                        "required": true
+                    },
+                    {
+                        "name": "folderId",
+                        "type": "text",
+                        "label": "Folder ID",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu1.make.com",
+        "notes": []
+    }
+}
